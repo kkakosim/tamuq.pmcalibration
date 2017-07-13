@@ -19,8 +19,16 @@ PM1mod=aqCalibNUM(:,1:11)*Mass(1:11);
 PM25mod=aqCalibNUM(:,1:15)*Mass(1:15);
 PM10mod=aqCalibNUM(:,1:23)*Mass(1:23);
 
-plot(PM10mod,aqCalibPM(:,1),'o');
-save('aqCalibMod.mat','PM1mod','PM25mod','PM10mod');
+%Use the ANN
+cost_func = 'NMSE';
+PMann=myNNF2(aqCalibNUM')';
+goodnessOfFit(PMann(:,3),aqCalibPM(:,3),cost_func)
+PM1ann=PMann(:,3);
+PM25ann=PMann(:,2);
+PM10ann=PMann(:,1);
+
+plot(PM10mod,PM10ann,'o');
+save('aqCalibMod.mat','PM1mod','PM25mod','PM10mod','PM1ann','PM25ann','PM10ann');
 
 end
 function fit=ObjFnc(Dens,Diam,PMnum,PMobs)

@@ -1,5 +1,6 @@
 Sys.setenv(TZ = "Etc/GMT-3")
 setwd("~/MATLAB/PMCalibration")
+setwd("p:/Chemical Engineering/Air_Quality_Eng_R_Team/!GITHUB/PMCalibration")
 library("openair", lib.loc="~/R/win-library/3.4")
 library("reshape", lib.loc="~/R/win-library/3.4")
 library("reshape2", lib.loc="~/R/win-library/3.4")
@@ -22,12 +23,12 @@ library("RDCOMClient", lib.loc="~/R/win-library/3.4")
 # NCDC.DIA<-rename(NCDC.DIA,c(ws='wsA',wd='wdA'))
 
 #PREPARE BG DATA
-fileN<-"AQERT 2 - June 1-5 OutDoor Home for Calibration.txt"
-aqCalib<-import(fileN, date = "Datum", date.format = "%d.%m.%Y %H:%M",header.at=2,data.at=700,sep=";",dec=".",stringsAsFactors = FALSE)
+fileN<-"AQERT 2 - June 1-13 OutDoor Home for Calibration.txt"
+aqCalib<-import(fileN, date = "Datum", date.format = "%d.%m.%Y %H:%M",header.at=4,data.at=7,sep=";",dec=".",stringsAsFactors = FALSE)
 drops<-c("AK", "NA")
 aqCalib<-aqCalib[,!(names(aqCalib) %in% drops)]
 aqCalib<-rename(aqCalib,c(W.Speed="ws",W.Direct="wd", PM10="PM10.obs",PM2.5="PM25.obs",PM1="PM1.obs"))
-aqCalib<-subset(aqCalib,PM10.obs<500)
+#aqCalib<-subset(aqCalib,PM10.obs<500)
 Conc<-aqCalib[,14:36]
 Conc<-data.matrix(Conc)#particles / lt
 PM<-aqCalib[,2:4]
@@ -44,10 +45,10 @@ Diam<-c(0.265,0.290,0.325,0.375,0.425,0.475,0.540,0.615,0.675,0.750,
 Vol<-(4/3)*pi*(Diam/2)^3
 Mass<-Vol # *2500 #density in kg/m3
 Conc<-sweep(Conc,MARGIN=2,Mass/1000000,'*') #ìg/m3
-aqCalib$PM1.mod<-rowSums (Conc[,1:11]*2727, na.rm = FALSE)
-aqCalib$PM25.mod<-aqCalib$PM1.mod+rowSums (Conc[,12:15]*2765, na.rm = FALSE)
-aqCalib$PM10.mod<-aqCalib$PM25.mod+rowSums (Conc[,16:23]*2158, na.rm = FALSE)
-rm(Conc)
+aqCalib$PM1.mod<-rowSums (Conc[,1:11]*2074, na.rm = FALSE)
+aqCalib$PM25.mod<-aqCalib$PM1.mod+rowSums (Conc[,12:15]*3000, na.rm = FALSE)
+aqCalib$PM10.mod<-aqCalib$PM25.mod+rowSums (Conc[,16:23]*2239, na.rm = FALSE)
+#rm(Conc)
 #write.csv(aqBG, file = "p:/Chemical Engineering/Air_Quality_Eng_R_Team/Papers/00 PM Construction Hala/aqBG.txt")
 
 # # Merge with Meteorology
@@ -67,10 +68,14 @@ rm(Conc)
 polarPlot(aqCalib,pollutant='PM1.obs',statistic="mean", offset = 50, ws.int = 30, trans = TRUE,grid.line=2,k=10,uncertainty=FALSE,par.settings=list(fontsize=list(text=24)))                                                                           
 polarPlot(aqCalib,pollutant='PM25.obs',statistic="mean", offset = 50, ws.int = 30, trans = TRUE,grid.line=2,k=10,uncertainty=FALSE,par.settings=list(fontsize=list(text=24)))                                                                           
 polarPlot(aqCalib,pollutant='PM10.obs',statistic="mean", offset = 50, ws.int = 30, trans = TRUE,grid.line=2,k=10,uncertainty=FALSE,par.settings=list(fontsize=list(text=24)))                                                                           
+timeVariation(subset(aqCalib,PM10.obs<300), pollutant = "PM10.obs", ylab = "pm10 (ug/m3)")
+timeVariation(subset(aqCalib,PM10.obs<300), pollutant = "PM25.obs", ylab = "pm2.5 (ug/m3)")
+timeVariation(subset(aqCalib,PM10.obs<15000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), ylab = "(ug/m3)",normalise = TRUE)
+
 # conditionalEval(aqCalib, obs = "PM10.obs", mod = "PM10.mod",statistic = "ws")
-conditionalEval(aqCalib, obs = "PM10.obs", mod = "PM10.mod")
-conditionalEval(aqCalib, obs = "PM25.obs", mod = "PM25.mod")
-conditionalEval(aqCalib, obs = "PM1.obs", mod = "PM1.mod")
+conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM10.obs", mod = "PM10.mod")
+conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM25.obs", mod = "PM25.mod")
+conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM1.obs", mod = "PM1.mod")
 scatterPlot(aqCalib, x = "PM10.mod", y = "PM10.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
 scatterPlot(aqCalib, x = "PM25.mod", y = "PM25.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
 scatterPlot(aqCalib, x = "PM1.mod", y = "PM1.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
@@ -80,15 +85,18 @@ aqCalibMod <- readMat('aqCalibMod.mat')
 aqCalib$PM10.mat<-aqCalibMod$PM10mod
 aqCalib$PM25.mat<-aqCalibMod$PM25mod
 aqCalib$PM1.mat<-aqCalibMod$PM1mod
+aqCalib$PM10.ann<-aqCalibMod$PM10ann
+aqCalib$PM25.ann<-aqCalibMod$PM25ann
+aqCalib$PM1.ann<-aqCalibMod$PM1ann
 ## Confirm matlab calculations 
 scatterPlot(aqCalib, x = "PM10.mod", y = "PM10.mat", method = "scatter", col= "jet", linear=TRUE,mod.line = TRUE)
 scatterPlot(aqCalib, x = "PM25.mod", y = "PM25.mat", method = "scatter", col= "jet", linear=TRUE,mod.line = TRUE)
 scatterPlot(aqCalib, x = "PM1.mod", y = "PM1.mat", method = "scatter",col= "jet", linear=TRUE,mod.line = TRUE)
 ## Evaluate matlab calculations 
+scatterPlot(aqCalib, x = "PM10.ann", y = "PM10.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
 scatterPlot(aqCalib, x = "PM10.mat", y = "PM10.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
 scatterPlot(aqCalib, x = "PM25.mat", y = "PM25.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
 scatterPlot(aqCalib, x = "PM1.mat", y = "PM1.obs", method = "hexbin",col= "jet", linear=TRUE,mod.line = TRUE)
-
                 
 # # #PREPARE CS DATA
 # # fileN2<-"p:/Chemical Engineering/Air_Quality_Eng_R_Team/Papers/00 PM Construction Hala/PRose-AQERT2.csv"

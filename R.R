@@ -1,11 +1,11 @@
 Sys.setenv(TZ = "Etc/GMT-3")
-setwd("~/MATLAB/PMCalibration")
+#setwd("~/MATLAB/PMCalibration")
 setwd("p:/Chemical Engineering/Air_Quality_Eng_R_Team/!GITHUB/PMCalibration")
 library("openair", lib.loc="~/R/win-library/3.4")
 library("reshape", lib.loc="~/R/win-library/3.4")
-library("reshape2", lib.loc="~/R/win-library/3.4")
+#library("reshape2", lib.loc="~/R/win-library/3.4")
 library("R.matlab", lib.loc="~/R/win-library/3.4")
-library("RDCOMClient", lib.loc="~/R/win-library/3.4")
+#library("RDCOMClient", lib.loc="~/R/win-library/3.4")
 
 # #READ METEOROLOGY
 # # Import data from NCDC for AIRPORT (411710 and QU 411700)
@@ -71,6 +71,8 @@ polarPlot(aqCalib,pollutant='PM10.obs',statistic="mean", offset = 50, ws.int = 3
 timeVariation(subset(aqCalib,PM10.obs<300), pollutant = "PM10.obs", ylab = "pm10 (ug/m3)")
 timeVariation(subset(aqCalib,PM10.obs<300), pollutant = "PM25.obs", ylab = "pm2.5 (ug/m3)")
 timeVariation(subset(aqCalib,PM10.obs<15000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), ylab = "(ug/m3)",normalise = TRUE)
+#timePlot(subset(aqCalib,PM10.obs<15000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), 
+ #S        group = TRUE,ylab = "pm10 (ug/m3)", avg.time = "day",data.thresh = 30,date.pad = TRUE, ylim=c(0,1500))
 
 # conditionalEval(aqCalib, obs = "PM10.obs", mod = "PM10.mod",statistic = "ws")
 conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM10.obs", mod = "PM10.mod")

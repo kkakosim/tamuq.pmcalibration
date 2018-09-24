@@ -1,10 +1,10 @@
 Sys.setenv(TZ = "Etc/GMT-3")
 #setwd("~/MATLAB/PMCalibration")
 setwd("p:/Chemical Engineering/Air_Quality_Eng_R_Team/!GITHUB/PMCalibration")
-library("openair", lib.loc="~/R/win-library/3.4")
-library("reshape", lib.loc="~/R/win-library/3.4")
-#library("reshape2", lib.loc="~/R/win-library/3.4")
-library("R.matlab", lib.loc="~/R/win-library/3.4")
+library("openair", lib.loc="~/R/win-library/3.5")
+library("reshape", lib.loc="~/R/win-library/3.5")
+#library("reshape2", lib.loc="~/R/win-library/3.5")
+library("R.matlab", lib.loc="~/R/win-library/3.5")
 #library("RDCOMClient", lib.loc="~/R/win-library/3.4")
 
 # #READ METEOROLOGY
@@ -23,7 +23,10 @@ library("R.matlab", lib.loc="~/R/win-library/3.4")
 # NCDC.DIA<-rename(NCDC.DIA,c(ws='wsA',wd='wdA'))
 
 #PREPARE BG DATA
-fileN<-"AQERT 2 - June 1-13 OutDoor Home for Calibration.txt"
+fileN<-"AQERT 2 - June 1-13 OutDoor Home for Calibration.txt" #USED during initial calibration
+fileN<-"AQERT 2 - May-Jul 2017 - Home.txt" #USED for verification of calibration
+fileN<-"AQERT 1 - May-Jul 2017 - PHCC.txt" #no mass observations
+
 aqCalib<-import(fileN, date = "Datum", date.format = "%d.%m.%Y %H:%M",header.at=4,data.at=7,sep=";",dec=".",stringsAsFactors = FALSE)
 drops<-c("AK", "NA")
 aqCalib<-aqCalib[,!(names(aqCalib) %in% drops)]
@@ -68,9 +71,15 @@ aqCalib$PM10.mod<-aqCalib$PM25.mod+rowSums (Conc[,16:23]*2239, na.rm = FALSE)
 polarPlot(aqCalib,pollutant='PM1.obs',statistic="mean", offset = 50, ws.int = 30, trans = TRUE,grid.line=2,k=10,uncertainty=FALSE,par.settings=list(fontsize=list(text=24)))                                                                           
 polarPlot(aqCalib,pollutant='PM25.obs',statistic="mean", offset = 50, ws.int = 30, trans = TRUE,grid.line=2,k=10,uncertainty=FALSE,par.settings=list(fontsize=list(text=24)))                                                                           
 polarPlot(aqCalib,pollutant='PM10.obs',statistic="mean", offset = 50, ws.int = 30, trans = TRUE,grid.line=2,k=10,uncertainty=FALSE,par.settings=list(fontsize=list(text=24)))                                                                           
-timeVariation(subset(aqCalib,PM10.obs<300), pollutant = "PM10.obs", ylab = "pm10 (ug/m3)")
-timeVariation(subset(aqCalib,PM10.obs<300), pollutant = "PM25.obs", ylab = "pm2.5 (ug/m3)")
-timeVariation(subset(aqCalib,PM10.obs<15000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), ylab = "(ug/m3)",normalise = TRUE)
+
+timeVariation(subset(aqCalib,PM10.obs<30000), pollutant = "PM10.obs", ylab = "pm10 (ug/m3)")
+timeVariation(subset(aqCalib,PM10.obs<30000), pollutant = "PM25.obs", ylab = "pm2.5 (ug/m3)")
+timeVariation(subset(aqCalib,PM10.obs<30000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), ylab = "(ug/m3)",normalise = TRUE)
+
+timeVariation(subset(aqCalib,PM10.mod<30000), pollutant = "PM10.mod", ylab = "pm10 (ug/m3)")
+timeVariation(subset(aqCalib,PM10.mod<30000), pollutant = "PM25.mod", ylab = "pm2.5 (ug/m3)")
+timeVariation(subset(aqCalib,PM10.mod<30000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), ylab = "(ug/m3)",normalise = TRUE)
+
 #timePlot(subset(aqCalib,PM10.obs<15000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), 
  #S        group = TRUE,ylab = "pm10 (ug/m3)", avg.time = "day",data.thresh = 30,date.pad = TRUE, ylim=c(0,1500))
 

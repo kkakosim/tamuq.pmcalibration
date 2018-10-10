@@ -26,8 +26,12 @@ library("R.matlab", lib.loc="~/R/win-library/3.5")
 fileN<-"AQERT 2 - June 1-13 OutDoor Home for Calibration.txt" #USED during initial calibration
 fileN<-"AQERT 2 - May-Jul 2017 - Home.txt" #USED for verification of calibration
 fileN<-"AQERT 1 - May-Jul 2017 - PHCC.txt" #no mass observations
-
 aqCalib<-import(fileN, date = "Datum", date.format = "%d.%m.%Y %H:%M",header.at=4,data.at=7,sep=";",dec=".",stringsAsFactors = FALSE)
+
+fileN<-"OUTDOOR - Apr-Jun 2015.txt" #no mass observations
+aqCalib<-import(fileN, date = "Datum", date.format = "%d.%m.%Y %H:%M",header.at=1,data.at=2,sep=";",dec=".",stringsAsFactors = FALSE)
+
+
 drops<-c("AK", "NA")
 aqCalib<-aqCalib[,!(names(aqCalib) %in% drops)]
 aqCalib<-rename(aqCalib,c(W.Speed="ws",W.Direct="wd", PM10="PM10.obs",PM2.5="PM25.obs",PM1="PM1.obs"))
@@ -46,8 +50,8 @@ Conc<-data.matrix(Conc)#particles / lt
 Diam<-c(0.265,0.290,0.325,0.375,0.425,0.475,0.540,0.615,0.675,0.750,
         0.900,1.150,1.450,1.800,2.250,2.750,3.250,3.750,4.500,5.750,7.000,8.000,9.250)
 Vol<-(4/3)*pi*(Diam/2)^3
-Mass<-Vol # *2500 #density in kg/m3
-Conc<-sweep(Conc,MARGIN=2,Mass/1000000,'*') #ìg/m3
+# Mass<-Vol # *2500 #density in kg/m3
+Conc<-sweep(Conc,MARGIN=2,Vol/1000000,'*') #ìg/m3
 aqCalib$PM1.mod<-rowSums (Conc[,1:11]*2074, na.rm = FALSE)
 aqCalib$PM25.mod<-aqCalib$PM1.mod+rowSums (Conc[,12:15]*3000, na.rm = FALSE)
 aqCalib$PM10.mod<-aqCalib$PM25.mod+rowSums (Conc[,16:23]*2239, na.rm = FALSE)

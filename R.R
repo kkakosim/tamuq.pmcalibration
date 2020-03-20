@@ -1,10 +1,10 @@
 Sys.setenv(TZ = "Etc/GMT-3")
 #setwd("~/MATLAB/PMCalibration")
 setwd("p:/Chemical Engineering/Air_Quality_Eng_R_Team/!GITHUB/PMCalibration")
-library("openair", lib.loc="~/R/win-library/3.5")
-library("reshape", lib.loc="~/R/win-library/3.5")
-#library("reshape2", lib.loc="~/R/win-library/3.5")
-library("R.matlab", lib.loc="~/R/win-library/3.5")
+library("openair")
+library("reshape")
+library("reshape2")
+library("R.matlab")
 #library("RDCOMClient", lib.loc="~/R/win-library/3.4")
 
 # #READ METEOROLOGY
@@ -44,7 +44,7 @@ writeMat(con="aqCalib.mat", aqCalibNUM=Conc,aqCalibPM=PM)
 
 
 
-# Calculate Concentration
+# Calculate Concentration & Evaluate with calculated Mass
 # Conc<-aqCalib[,14:36]
 Conc<-data.matrix(Conc)#particles / lt
 Diam<-c(0.265,0.290,0.325,0.375,0.425,0.475,0.540,0.615,0.675,0.750,
@@ -52,9 +52,21 @@ Diam<-c(0.265,0.290,0.325,0.375,0.425,0.475,0.540,0.615,0.675,0.750,
 Vol<-(4/3)*pi*(Diam/2)^3
 # Mass<-Vol # *2500 #density in kg/m3
 Conc<-sweep(Conc,MARGIN=2,Vol/1000000,'*') #ìg/m3
+Conc$PNC1<-rowSums (Conc[,1:11], na.rm = FALSE)
+Conc$PNC25<-rowSums (Conc[,12:15], na.rm = FALSE)
+Conc$PNC10<-rowSums (Conc[,16:23], na.rm = FALSE)
 aqCalib$PM1.mod<-rowSums (Conc[,1:11]*2074, na.rm = FALSE)
 aqCalib$PM25.mod<-aqCalib$PM1.mod+rowSums (Conc[,12:15]*3000, na.rm = FALSE)
 aqCalib$PM10.mod<-aqCalib$PM25.mod+rowSums (Conc[,16:23]*2239, na.rm = FALSE)
+
+# conditionalEval(aqCalib, obs = "PM10.obs", mod = "PM10.mod",statistic = "ws")
+conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM10.obs", mod = "PM10.mod")
+conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM25.obs", mod = "PM25.mod")
+conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM1.obs", mod = "PM1.mod")
+scatterPlot(aqCalib, x = "PM10.mod", y = "PM10.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
+scatterPlot(aqCalib, x = "PM25.mod", y = "PM25.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
+scatterPlot(aqCalib, x = "PM1.mod", y = "PM1.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
+
 #rm(Conc)
 #write.csv(aqBG, file = "p:/Chemical Engineering/Air_Quality_Eng_R_Team/Papers/00 PM Construction Hala/aqBG.txt")
 
@@ -87,13 +99,7 @@ timeVariation(subset(aqCalib,PM10.mod<30000), pollutant = c("PM1.obs","PM25.obs"
 #timePlot(subset(aqCalib,PM10.obs<15000), pollutant = c("PM1.obs","PM25.obs","PM10.obs"), 
  #S        group = TRUE,ylab = "pm10 (ug/m3)", avg.time = "day",data.thresh = 30,date.pad = TRUE, ylim=c(0,1500))
 
-# conditionalEval(aqCalib, obs = "PM10.obs", mod = "PM10.mod",statistic = "ws")
-conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM10.obs", mod = "PM10.mod")
-conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM25.obs", mod = "PM25.mod")
-conditionalEval(subset(aqCalib,PM10.obs<15000), obs = "PM1.obs", mod = "PM1.mod")
-scatterPlot(aqCalib, x = "PM10.mod", y = "PM10.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
-scatterPlot(aqCalib, x = "PM25.mod", y = "PM25.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
-scatterPlot(aqCalib, x = "PM1.mod", y = "PM1.obs", method = "hexbin", col= "jet", linear=TRUE,mod.line = TRUE)
+
 
 # Get Matlab Calculated Valies
 aqCalibMod <- readMat('aqCalibMod.mat')
